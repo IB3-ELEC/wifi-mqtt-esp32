@@ -1,15 +1,15 @@
+#include <Adafruit_PN532.h>
 #include "WiFi.h"
 #include "PubSubClient.h" //pio lib install "knolleary/PubSubClient"
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
-#include <Adafruit_PN532.h>
 
 #define SSID          "IB3"
 #define PWD           "odroidn2+"
 
 #define MQTT_SERVER   "192.168.3.5"
-#define MQTT_PORT     22
+#define MQTT_PORT     1883
 
 #define PN532_IRQ   4
 #define PN532_RESET 5 
@@ -68,15 +68,17 @@ void setup_np532(){
   
   // configure board to read RFID tags
   nfc.SAMConfig();
+
+  startListeningToNFC();
 }
 
 void setup()
 {
   Serial.begin(115200);
   setup_wifi();
-  setup_np532();
   client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);
+  setup_np532();
 }
 
 void callback(char *topic, byte *message, unsigned int length)
@@ -95,7 +97,7 @@ void callback(char *topic, byte *message, unsigned int length)
 
   // If a message is received on the topic esp32/output, you check if the message is either "on" or "off".
   // Changes the output state according to the message
-  if (String(topic) == "esp32/password")
+  if (String(topic) == "password")
   {
     Serial.print("Password: "+ messageTemp);
   }
@@ -118,11 +120,11 @@ void reconnect()
     // Attempt to connect
     // creat unique client ID
     // in Mosquitto broker enable anom. access
-    if (client.connect("ESP8266Client"))
+    if (client.connect("READER"))
     {
       Serial.println("connected");
       // Subscribe
-      client.subscribe("esp32/output");
+      client.subscribe("password");
     }
     else
     {
@@ -135,7 +137,7 @@ void reconnect()
   }
 }
 
-void loop_np532(void) {
+void np532(void) {
   if (readerDisabled) {
     if (millis() - timeLastCardRead > DELAY_BETWEEN_CARDS) {
       readerDisabled = false;
@@ -158,6 +160,16 @@ void handleCardDetected() {
     uint8_t success = false;
     uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
     uint8_t uidLength;                        // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
+    uint8_t auth_uids1[][7] = {
+              {0x04 ,0x07 ,0xCC ,0x52 ,0xA8 ,0x58 ,0x81},
+              {0x04, 0x5B, 0xB4, 0x7A, 0x66, 0x62, 0x81},  // TAG
+    };
+    uint8_t auth_uids2[][4] = {
+              {0x49, 0x1E, 0x07, 0xC2},
+              {0xC9, 0xFC, 0x04, 0xC2},
+              {0x49, 0x2A, 0x06, 0xC2},
+    };
+
 
     // read the NFC tag's info
     success = nfc.readDetectedPassiveTargetID(uid, &uidLength);
@@ -170,7 +182,65 @@ void handleCardDetected() {
       //Serial.print("  UID Value: ");
       Serial.print("Card ID HEX Value: ");
       nfc.PrintHex(uid, uidLength);
-      client.publish("card", uid);
+      if (uidLength == 7){
+        for (int b=0; b < 7; b++){
+            if (uid[b] == auth_uids1[0][b]){
+              if (b == 6){
+              client.publish("kaart1","ok");
+              Serial.println("Message sent to kaart1");
+              }
+            }
+            else{
+            b=uidLength;
+          }
+        }
+        for (int b=0; b<7;b++){
+          if (uid[b] == auth_uids1[1][b]){
+              if (b == 6){
+              client.publish("kaart2","ok");
+              Serial.println("Message sent to kaart2");
+              }
+          }
+          else{
+            b=uidLength;
+          }
+        }
+      }
+      else if(uidLength == 4){
+        for (int b=0; b<4; b++){
+          if (uid[b]== auth_uids2[0][b]){
+            if (b==3){
+              client.publish("kaart3","ok");
+              Serial.println("Message sent to kaart3");
+            }
+          }
+          else{
+            b=uidLength;
+          }
+        }
+        for (int b=0; b<4; b++){
+          if (uid[b]== auth_uids2[1][b]){
+            if (b==3){
+              client.publish("kaart4","ok");
+              Serial.println("Message sent to kaart4");
+            }
+          }
+                    else{
+            b=uidLength;
+          }
+      }
+      for (int b=0; b<4; b++){
+          if (uid[b]== auth_uids2[2][b]){
+            if (b==3){
+              client.publish("kaart5","ok");
+              Serial.println("Message sent to kaart5");
+            }
+          }
+                    else{
+            b=uidLength;
+          }
+      }
+      } 
       Serial.println("");
       timeLastCardRead = millis();
     }
@@ -186,7 +256,7 @@ void loop()
     reconnect();
   }
   client.loop();
-  loop_np532();
+  np532();
 
   long now = millis();
   if (now - lastMsg > 5000)
