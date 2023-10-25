@@ -48,13 +48,10 @@ void setup()
   setup_wifi();
   client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);
-
-<<<<<<< Updated upstream
-=======
+  
   pinMode(LED_PIN, OUTPUT);
 
   client.subscribe("card");
->>>>>>> Stashed changes
 }
 
 void callback(char *topic, byte *message, unsigned int length)
