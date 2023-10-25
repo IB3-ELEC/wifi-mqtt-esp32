@@ -51,7 +51,6 @@ void setup()
   Serial.println(WiFi.localIP());
   pinMode(LED_PIN, OUTPUT);
 
-  client.subscribe("card");
 }
 
 void callback(char *topic, byte *message, unsigned int length)
@@ -60,6 +59,28 @@ void callback(char *topic, byte *message, unsigned int length)
   Serial.print(topic);
   Serial.print(". Message: ");
   String messageTemp;
+  String topicString = String(topic);
+
+  if (topicString == "kaart1"){
+    kaart1 = true;
+    Serial.println("kaart1 is ok");
+    }
+  else if (topicString == "kaart2"){
+    kaart2 = true;
+    Serial.println("kaart2 is ok");
+    }
+  else if (topicString == "kaart3"){
+    kaart3 = true;
+    Serial.println("kaart3 is ok");
+    }
+  else if (topicString == "kaart4"){
+    kaart4 = true;
+    Serial.println("kaart4 is ok");
+    }
+  else if (topicString == "kaart5"){
+    kaart5 = true;
+    Serial.println("kaart5 is ok");
+    }
 
   for (int i = 0; i < length; i++)
   {
@@ -67,38 +88,6 @@ void callback(char *topic, byte *message, unsigned int length)
     messageTemp += (char)message[i];
   }
   Serial.println();
-
-  if (topic == "card"){
-    switch (message[5])
-    {
-    case 0:
-      kaart1 = true;
-      break;
-    case 1:
-      kaart2 = true;
-      break;
-    case 2:
-      kaart3 = true;
-      break;
-    case 3:
-      kaart4 = true;
-      break;
-    case 4:
-      kaart5 = true;
-      break;
-    default:
-      break;
-    }
-
-    if (kaart1 and kaart2 and kaart3 and kaart4 and kaart5){
-      client.publish("password", "dit is je wachtwoord");
-      kaart1 = false;
-      kaart2 = false;
-      kaart3 = false;
-      kaart4 = false;
-      kaart5 = false;
-    }
-  }
 
   // Feel free to add more if statements to control more GPIOs with MQTT
 
@@ -129,11 +118,12 @@ void reconnect()
     // Attempt to connect
     // creat unique client ID
     // in Mosquitto broker enable anom. access
-    if (client.connect("ESP8266Client"))
+    if (client.connect("wachtwoord"))
     {
       Serial.println("connected");
       // Subscribe
       client.subscribe("esp32/output");
+      client.subscribe("#");
     }
     else
     {
@@ -152,6 +142,15 @@ void loop()
     reconnect();
   }
   client.loop();
+
+  if (kaart1 and kaart2 and kaart3 and kaart4 and kaart5){
+    client.publish("password", "dit is je super geheime wachtwoord sssht");
+    kaart1 = false;
+    kaart2 = false;
+    kaart3 = false;
+    kaart4 = false;
+    kaart5 = false;
+  }
 
   long now = millis();
   if (now - lastMsg > 5000)
