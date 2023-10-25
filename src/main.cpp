@@ -38,14 +38,11 @@ void setup_wifi()
 
 void setup()
 {
-
   Serial.begin(115200);
-
   setup_wifi();
   client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);
 
-  pinMode(LED_PIN, OUTPUT);
 }
 
 void callback(char *topic, byte *message, unsigned int length)
@@ -66,9 +63,9 @@ void callback(char *topic, byte *message, unsigned int length)
 
   // If a message is received on the topic esp32/output, you check if the message is either "on" or "off".
   // Changes the output state according to the message
-  if (String(topic) == "esp32/output")
+  if (String(topic) == "esp32/password")
   {
-    Serial.print("Changing output to ");
+    Serial.print("Pass ");
     if (messageTemp == "on")
     {
       Serial.println("on");
