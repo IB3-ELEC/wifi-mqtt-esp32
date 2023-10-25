@@ -1,10 +1,10 @@
 #include "WiFi.h"
 #include "PubSubClient.h" //pio lib install "knolleary/PubSubClient"
 
-#define SSID          "Techtile"
-#define PWD           "Techtile229"
+#define SSID          "IB3"
+#define PWD           "odroidn2+"
 
-#define MQTT_SERVER   "10.128.48.25"
+#define MQTT_SERVER   "192.168.3.5"
 #define MQTT_PORT     1883
 
 #define LED_PIN       2
@@ -14,6 +14,12 @@ PubSubClient client(espClient);
 long lastMsg = 0;
 char msg[50];
 int value = 0;
+
+boolean kaart1 = false;
+boolean kaart2 = false;
+boolean kaart3 = false;
+boolean kaart4 = false;
+boolean kaart5 = false;
 
 void callback(char *topic, byte *message, unsigned int length);
 
@@ -43,6 +49,12 @@ void setup()
   client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);
 
+<<<<<<< Updated upstream
+=======
+  pinMode(LED_PIN, OUTPUT);
+
+  client.subscribe("card");
+>>>>>>> Stashed changes
 }
 
 void callback(char *topic, byte *message, unsigned int length)
@@ -58,6 +70,38 @@ void callback(char *topic, byte *message, unsigned int length)
     messageTemp += (char)message[i];
   }
   Serial.println();
+
+  if (topic == "card"){
+    switch (message[5])
+    {
+    case 0:
+      kaart1 = true;
+      break;
+    case 1:
+      kaart2 = true;
+      break;
+    case 2:
+      kaart3 = true;
+      break;
+    case 3:
+      kaart4 = true;
+      break;
+    case 4:
+      kaart5 = true;
+      break;
+    default:
+      break;
+    }
+
+    if (kaart1 and kaart2 and kaart3 and kaart4 and kaart5){
+      client.publish("password", "dit is je wachtwoord");
+      kaart1 = false;
+      kaart2 = false;
+      kaart3 = false;
+      kaart4 = false;
+      kaart5 = false;
+    }
+  }
 
   // Feel free to add more if statements to control more GPIOs with MQTT
 
