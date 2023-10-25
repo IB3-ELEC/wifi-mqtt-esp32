@@ -48,7 +48,7 @@ void setup()
   setup_wifi();
   client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);
-  
+  Serial.println(WiFi.localIP());
   pinMode(LED_PIN, OUTPUT);
 
   client.subscribe("card");
